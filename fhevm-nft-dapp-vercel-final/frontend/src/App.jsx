@@ -43,9 +43,7 @@ export default function App() {
 
       <div
         className={`w-72 h-72 rounded-2xl shadow-2xl mb-8 ${
-          NFT_IMAGE_URL
-            ? "bg-cover bg-center"
-            : "bg-gradient-to-br from-purple-400 to-pink-500"
+          NFT_IMAGE_URL ? "bg-cover bg-center" : "bg-gradient-to-br from-purple-400 to-pink-500"
         }`}
         style={NFT_IMAGE_URL ? { backgroundImage: `url(${NFT_IMAGE_URL})` } : {}}
       ></div>
