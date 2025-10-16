@@ -1,9 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zama NFT DApp</title>
+    <!-- Zama SDK UMD Bundle -->
+    <script src="https://unpkg.com/@zama-fhe/relayer-sdk/dist/bundle.umd.js"></script>
+    <script>
+      window.ZamaSDK = window.ZamaFHE;
+    </script>
   </head>
   <body>
     <div id="root"></div>

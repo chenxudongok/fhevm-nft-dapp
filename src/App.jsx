@@ -1,23 +1,26 @@
+
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { initSDK, createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle';
-import catImage from './assets/cat.png';
 import './index.css';
 
 function App() {
   const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
   const [contractAddress, setContractAddress] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState('https://pbs.twimg.com/profile_images/1654459351300468736/ywoKR9uZ_400x400.jpg');
   const [txHash, setTxHash] = useState(null);
   const [sdk, setSdk] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     const init = async () => {
+      if (!window.ZamaSDK) {
+        console.error('Zama SDK not loaded');
+        return;
+      }
       try {
-        const instance = await initSDK(SepoliaConfig);
-        const client = await createInstance(instance);
+        const instance = await window.ZamaSDK.initSDK(window.ZamaSDK.SepoliaConfig);
+        const client = await window.ZamaSDK.createInstance(instance);
         setSdk(client);
         console.log('✅ Zama SDK Initialized');
       } catch (err) {
@@ -49,11 +52,12 @@ function App() {
       const signer = await provider.getSigner();
       const abi = ['function mint(address to, string memory uri) public returns (uint256)'];
       const contract = new ethers.Contract(contractAddress, abi, signer);
-      const tx = await contract.mint(account, imageUrl || 'https://placekitten.com/400/400');
+      const tx = await contract.mint(account, imageUrl);
       const receipt = await tx.wait();
       setTxHash(receipt.transactionHash);
+      alert('✅ Mint Success! Tx: ' + receipt.transactionHash);
     } catch (err) {
-      alert('Mint Failed: ' + err.message);
+      alert('❌ Mint Failed: ' + err.message);
     }
   };
 
@@ -78,7 +82,7 @@ function App() {
       </header>
 
       <main>
-        <img src={imageUrl || catImage} alt="NFT Preview" className="nft-image" />
+        <img src={imageUrl} alt="NFT Preview" className="nft-image" />
         <input
           type="text"
           placeholder="Contract Address"
