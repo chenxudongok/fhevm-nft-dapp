@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import MyEncryptedNFTJson from "./MyEncryptedNFT.json";
+import { FHEVM } from "fhevm";
+
+const ZAMA_TESTNET_RPC = "https://rpc.testnet.zama.ai";
+const ZAMA_CHAIN_ID = 12345; // 替换为官方提供的测试链ID
 
 function App() {
   const [provider, setProvider] = useState(null);
@@ -8,11 +12,28 @@ function App() {
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState(null);
   const [minted, setMinted] = useState([]);
+  const [fhe, setFhe] = useState(null);
   const contractAddress = "YOUR_DEPLOYED_CONTRACT_ADDRESS";
+
+  useEffect(() => {
+    const fheInstance = new FHEVM();
+    setFhe(fheInstance);
+  }, []);
 
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0x" + ZAMA_CHAIN_ID.toString(16),
+            chainName: "Zama Testnet",
+            rpcUrls: [ZAMA_TESTNET_RPC],
+            nativeCurrency: { name: "ZAMA", symbol: "ZAMA", decimals: 18 },
+            blockExplorerUrls: ["https://explorer.testnet.zama.ai"]
+          }]
+        });
+
         const prov = new ethers.BrowserProvider(window.ethereum);
         await prov.send("eth_requestAccounts", []);
         const s = await prov.getSigner();
@@ -25,6 +46,7 @@ function App() {
         alert(`Wallet connected: ${addr}`);
       } catch (err) {
         console.error(err);
+        alert("Failed to connect or switch network.");
       }
     } else {
       alert("Please install MetaMask!");
@@ -48,9 +70,9 @@ function App() {
   };
 
   const setEncryptedData = async (tokenId) => {
-    if (!contract) return;
-    const data = ethers.toUtf8Bytes("Hello Encrypted NFT!");
-    const tx = await contract.setEncryptedData(tokenId, data);
+    if (!contract || !fhe) return;
+    const encrypted = await fhe.encrypt("Hello Encrypted NFT!");
+    const tx = await contract.setEncryptedData(tokenId, encrypted);
     await tx.wait();
     alert(`Encrypted data set for token #${tokenId}`);
   };
@@ -92,6 +114,11 @@ function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {minted.map((id) => (
               <div key={id} className="bg-gray-50 p-4 rounded-lg shadow flex flex-col justify-between">
+                <img 
+                  src="https://placekitten.com/200/200" 
+                  alt={`NFT #${id}`} 
+                  className="w-full h-40 object-cover rounded mb-2"
+                />
                 <p className="font-bold text-lg mb-2">Token #{id}</p>
                 <button
                   onClick={() => setEncryptedData(id)}
