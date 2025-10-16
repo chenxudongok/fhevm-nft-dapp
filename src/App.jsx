@@ -1,7 +1,5 @@
 import React, {useState, useEffect} from "react";
 import { ethers } from "ethers";
-// note: @zama-fhe/relayer-sdk is added as dependency; app shows how to initialize it if needed.
-import { Relayer } from "@zama-fhe/relayer-sdk";
 
 function truncate(address){
   if(!address) return "";
@@ -17,40 +15,46 @@ export default function App(){
   const [minting, setMinting] = useState(false);
   const [toast, setToast] = useState(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [relayerLoaded, setRelayerLoaded] = useState(false);
 
-  // Optional: example Relayer init (you'll need to provide relayerUrl in real use)
+  // Dynamic import of Zama SDK
   useEffect(() => {
-    // Example only: do not rely on this without configuring relayerUrl/gatewayUrl as needed.
-    // const relayer = new Relayer({ relayerUrl: "https://relayer.zama.ai" });
-    // window.zamaRelayer = relayer;
-  },[])
+    (async () => {
+      try {
+        const mod = await import("@zama-fhe/relayer-sdk");
+        console.log("Zama SDK loaded", mod);
+        setRelayerLoaded(true);
+      } catch (err) {
+        console.warn("Zama SDK not loaded:", err);
+      }
+    })();
+  }, []);
 
   useEffect(()=>{
     if(window.ethereum){
-      const p = new ethers.BrowserProvider(window.ethereum)
-      setProvider(p)
+      const p = new ethers.BrowserProvider(window.ethereum);
+      setProvider(p);
       p.getSigner().then(s=> {
         s.getAddress().then(addr=>{
-          setSigner(s)
-          setAddress(addr)
-        }).catch(()=>{/*not connected*/})
-      }).catch(()=>{/*no signer yet*/})
-      // listen to account change
+          setSigner(s);
+          setAddress(addr);
+        }).catch(()=>{/*not connected*/});
+      }).catch(()=>{/*no signer yet*/});
       window.ethereum.on && window.ethereum.on("accountsChanged", (accounts)=> {
         if(accounts.length===0){
           disconnect();
         }else{
           setAddress(accounts[0]);
         }
-      })
+      });
     }
-  },[])
+  },[]);
 
   async function connect(){
     if(!window.ethereum) return alert("Please install MetaMask");
     try{
       await window.ethereum.request({ method: "eth_requestAccounts" });
-      const p = new ethers.BrowserProvider(window.ethereum)
+      const p = new ethers.BrowserProvider(window.ethereum);
       const s = await p.getSigner();
       const addr = await s.getAddress();
       setProvider(p);
@@ -65,7 +69,6 @@ export default function App(){
   function disconnect(){
     setAddress("");
     setSigner(null);
-    // MetaMask doesn't provide programmatic disconnect; just clear UI state.
   }
 
   async function mint(){
@@ -74,7 +77,6 @@ export default function App(){
     setMinting(true);
     setToast(null);
     try{
-      // Minimal ERC-721 ABI with common mint variants
       const abi = [
         "function safeMint(address to, string memory tokenURI) public returns (uint256)",
         "function mint(address to, string memory tokenURI) public returns (uint256)",
@@ -84,7 +86,6 @@ export default function App(){
       const contract = new ethers.Contract(contractAddress, abi, signer);
       const to = address || (await signer.getAddress());
       let tx;
-      // try safeMint then mint variants
       const variants = ["safeMint","mint","mintToken","mintNFT"];
       let called = false;
       for(const fn of variants){
@@ -95,12 +96,11 @@ export default function App(){
             break;
           }
         }catch(err){
-          // try next
-          console.warn("error calling",fn,err)
+          console.warn("error calling",fn,err);
         }
       }
       if(!called){
-        throw new Error("No supported mint function found in contract ABI. Ensure your contract exposes safeMint(address,string) or mint(address,string).");
+        throw new Error("No supported mint function found.");
       }
       setToast({status:"pending", msg:"Transaction submitted: " + tx.hash});
       await tx.wait();
@@ -117,7 +117,7 @@ export default function App(){
   return (
     <div className="app">
       <div className="header">
-        <div className="brand">Zama Mint DApp (placeholder)</div>
+        <div className="brand">Zama Mint DApp (Dynamic SDK)</div>
         <div>
           {address ? (
             <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -126,10 +126,7 @@ export default function App(){
                 <div className="modal">
                   <div className="small">Connected: <strong>{address}</strong></div>
                   <div style={{height:8}}/>
-                  <button className="wallet-btn" onClick={()=>{
-                    disconnect();
-                    setShowWalletModal(false);
-                  }}>Disconnect</button>
+                  <button className="wallet-btn" onClick={()=>{disconnect();setShowWalletModal(false);}}>Disconnect</button>
                 </div>
               )}
             </div>
@@ -156,12 +153,8 @@ export default function App(){
             </button>
             {!address && <div className="small">Connect wallet to enable mint</div>}
           </div>
-          <div style={{marginTop:18}} className="small">Notes:
-            <ul>
-              <li>This UI attempts to call common mint functions (safeMint / mint / mintToken / mintNFT). Ensure the contract exposes one of them.</li>
-              <li>The image URL will be passed as tokenURI. For real metadata, use a JSON metadata URL (ERC-721 metadata standard).</li>
-              <li>The @zama-fhe/relayer-sdk is included as a dependency — configure and initialize it per Zama docs if you need relayer support.</li>
-            </ul>
+          <div style={{marginTop:18}} className="small">
+            {relayerLoaded ? "Zama SDK loaded dynamically ✅" : "Zama SDK not loaded yet ⚙️"}
           </div>
         </div>
       </div>
@@ -173,5 +166,5 @@ export default function App(){
         </div>
       )}
     </div>
-  )
+  );
 }
