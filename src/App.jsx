@@ -1,138 +1,102 @@
-import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import MyEncryptedNFTJson from "./MyEncryptedNFT.json";
-import { FHEVM } from "fhevm";
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk';
 
-const ZAMA_TESTNET_RPC = "https://rpc.testnet.zama.ai";
-const ZAMA_CHAIN_ID = 12345; // 替换为官方提供的测试链ID
+const NFT_CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS_HERE';
+const NFT_ABI = [
+  { inputs: [{ internalType: 'address', name: 'to', type: 'address' }], name: 'mint', outputs: [], stateMutability: 'nonpayable', type: 'function' },
+  { inputs: [], name: 'nextTokenId', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function' }
+];
 
-function App() {
-  const [provider, setProvider] = useState(null);
+export default function App() {
+  const [account, setAccount] = useState(null);
   const [signer, setSigner] = useState(null);
   const [contract, setContract] = useState(null);
-  const [account, setAccount] = useState(null);
+  const [fheInstance, setFheInstance] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [minted, setMinted] = useState([]);
-  const [fhe, setFhe] = useState(null);
-  const contractAddress = "YOUR_DEPLOYED_CONTRACT_ADDRESS";
 
   useEffect(() => {
-    const fheInstance = new FHEVM();
-    setFhe(fheInstance);
+    const initFHE = async () => {
+      const instance = await createInstance(SepoliaConfig);
+      setFheInstance(instance);
+    };
+    initFHE();
   }, []);
 
   const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [{
-            chainId: "0x" + ZAMA_CHAIN_ID.toString(16),
-            chainName: "Zama Testnet",
-            rpcUrls: [ZAMA_TESTNET_RPC],
-            nativeCurrency: { name: "ZAMA", symbol: "ZAMA", decimals: 18 },
-            blockExplorerUrls: ["https://explorer.testnet.zama.ai"]
-          }]
-        });
-
-        const prov = new ethers.BrowserProvider(window.ethereum);
-        await prov.send("eth_requestAccounts", []);
-        const s = await prov.getSigner();
-        const addr = await s.getAddress();
-        setProvider(prov);
-        setSigner(s);
-        setAccount(addr);
-        const c = new ethers.Contract(contractAddress, MyEncryptedNFTJson.abi, s);
-        setContract(c);
-        alert(`Wallet connected: ${addr}`);
-      } catch (err) {
-        console.error(err);
-        alert("Failed to connect or switch network.");
-      }
-    } else {
-      alert("Please install MetaMask!");
+    if (!window.ethereum) return alert('Please install MetaMask!');
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      const s = await provider.getSigner();
+      const addr = await s.getAddress();
+      setAccount(addr);
+      setSigner(s);
+      const c = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, s);
+      setContract(c);
+      fetchMintedNFTs(c);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to connect wallet.');
     }
   };
 
   const mintNFT = async () => {
-    if (!contract) return alert("Connect wallet first");
-    const tx = await contract.mint(account);
-    await tx.wait();
-    alert("Minted!");
-    fetchNFTs();
-  };
-
-  const fetchNFTs = async () => {
     if (!contract) return;
-    const total = await contract.nextTokenId();
-    const nfts = [];
-    for (let i = 0; i < total; i++) nfts.push(i);
-    setMinted(nfts);
+    setLoading(true);
+    try {
+      if (fheInstance) {
+        const encryptedMessage = await fheInstance.encrypt('Hello NFT!');
+        console.log('Encrypted message:', encryptedMessage);
+      }
+      const tx = await contract.mint(account);
+      await tx.wait();
+      alert('Mint success!');
+      fetchMintedNFTs(contract);
+    } catch (err) {
+      console.error(err);
+      alert('Mint failed!');
+    }
+    setLoading(false);
   };
 
-  const setEncryptedData = async (tokenId) => {
-    if (!contract || !fhe) return;
-    const encrypted = await fhe.encrypt("Hello Encrypted NFT!");
-    const tx = await contract.setEncryptedData(tokenId, encrypted);
-    await tx.wait();
-    alert(`Encrypted data set for token #${tokenId}`);
+  const fetchMintedNFTs = async (c) => {
+    if (!c) return;
+    try {
+      const total = await c.nextTokenId();
+      const nfts = [];
+      for (let i = 0; i < total; i++) {
+        nfts.push({ id: i, imageUrl: 'https://placekitten.com/200/200' });
+      }
+      setMinted(nfts);
+    } catch (err) {
+      console.error(err);
+    }
   };
-
-  useEffect(() => {
-    fetchNFTs();
-  }, [contract]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center">My Encrypted NFT DApp</h1>
-
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 p-6">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-6">FHE NFT DApp</h1>
         {!account ? (
-          <div className="text-center">
-            <button
-              onClick={connectWallet}
-              className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
-            >
-              Connect Wallet
-            </button>
-          </div>
+          <button onClick={connectWallet} className="w-full mb-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">Connect Wallet</button>
         ) : (
-          <div className="mb-6 text-center">
-            <p className="mb-2">Connected: {account}</p>
-            <button
-              onClick={mintNFT}
-              className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
-            >
-              Mint NFT
-            </button>
-          </div>
+          <p className="mb-4 font-medium text-gray-700">Connected: {account}</p>
         )}
-
-        <h2 className="text-2xl font-semibold mb-4">Minted NFTs</h2>
-        {minted.length === 0 ? (
-          <p className="text-gray-500">No NFTs minted yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {minted.map((id) => (
-              <div key={id} className="bg-gray-50 p-4 rounded-lg shadow flex flex-col justify-between">
-                <img 
-                  src="https://placekitten.com/200/200" 
-                  alt={`NFT #${id}`} 
-                  className="w-full h-40 object-cover rounded mb-2"
-                />
-                <p className="font-bold text-lg mb-2">Token #{id}</p>
-                <button
-                  onClick={() => setEncryptedData(id)}
-                  className="mt-auto px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
-                >
-                  Set Encrypted Data
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <button onClick={mintNFT} disabled={!account || loading} className={`w-full px-6 py-3 font-semibold rounded-lg transition ${account ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-400 text-gray-200 cursor-not-allowed'}`}>{loading ? 'Minting...' : 'Mint NFT'}</button>
       </div>
+
+      {minted.length > 0 && (
+        <div className="mt-8 w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {minted.map((nft) => (
+            <div key={nft.id} className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
+              <img src={nft.imageUrl} alt={`NFT #${nft.id}`} className="w-full h-40 object-cover rounded mb-2" />
+              <p className="font-bold">Token #{nft.id}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-
-export default App;
