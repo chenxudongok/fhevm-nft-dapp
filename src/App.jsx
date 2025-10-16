@@ -1,170 +1,123 @@
-import React, {useState, useEffect} from "react";
-import { ethers } from "ethers";
+import React, { useState, useEffect } from 'react'
+import { ethers } from 'ethers'
+import { initSDK, createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle'
 
-function truncate(address){
-  if(!address) return "";
-  return address.slice(0,6) + "..." + address.slice(-4);
-}
+export default function App() {
+  const [account, setAccount] = useState(null)
+  const [contractAddress, setContractAddress] = useState('')
+  const [imageURL, setImageURL] = useState('https://placekitten.com/300/300')
+  const [txHash, setTxHash] = useState(null)
+  const [relayer, setRelayer] = useState(null)
+  const [showMenu, setShowMenu] = useState(false)
 
-export default function App(){
-  const [provider, setProvider] = useState(null);
-  const [signer, setSigner] = useState(null);
-  const [address, setAddress] = useState("");
-  const [contractAddress, setContractAddress] = useState("");
-  const [imageUrl, setImageUrl] = useState("/cat.png");
-  const [minting, setMinting] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [showWalletModal, setShowWalletModal] = useState(false);
-  const [relayerLoaded, setRelayerLoaded] = useState(false);
-
-  // Dynamic import of Zama SDK
   useEffect(() => {
     (async () => {
       try {
-        const mod = await import("@zama-fhe/relayer-sdk");
-        console.log("Zama SDK loaded", mod);
-        setRelayerLoaded(true);
+        const sdk = await initSDK(SepoliaConfig)
+        const relayerInstance = createInstance(sdk)
+        console.log('✅ Zama Relayer Initialized:', relayerInstance)
+        setRelayer(relayerInstance)
       } catch (err) {
-        console.warn("Zama SDK not loaded:", err);
+        console.error('Failed to init Zama Relayer:', err)
       }
-    })();
-  }, []);
+    })()
+  }, [])
 
-  useEffect(()=>{
-    if(window.ethereum){
-      const p = new ethers.BrowserProvider(window.ethereum);
-      setProvider(p);
-      p.getSigner().then(s=> {
-        s.getAddress().then(addr=>{
-          setSigner(s);
-          setAddress(addr);
-        }).catch(()=>{/*not connected*/});
-      }).catch(()=>{/*no signer yet*/});
-      window.ethereum.on && window.ethereum.on("accountsChanged", (accounts)=> {
-        if(accounts.length===0){
-          disconnect();
-        }else{
-          setAddress(accounts[0]);
-        }
-      });
+  async function connectWallet() {
+    if (!window.ethereum) {
+      alert('MetaMask not detected!')
+      return
     }
-  },[]);
-
-  async function connect(){
-    if(!window.ethereum) return alert("Please install MetaMask");
-    try{
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      const p = new ethers.BrowserProvider(window.ethereum);
-      const s = await p.getSigner();
-      const addr = await s.getAddress();
-      setProvider(p);
-      setSigner(s);
-      setAddress(addr);
-    }catch(e){
-      console.error(e);
-      alert("Failed to connect: " + (e.message||e));
-    }
+    const provider = new ethers.BrowserProvider(window.ethereum)
+    const accounts = await provider.send('eth_requestAccounts', [])
+    setAccount(accounts[0])
   }
 
-  function disconnect(){
-    setAddress("");
-    setSigner(null);
-  }
-
-  async function mint(){
-    if(!signer) return;
-    if(!contractAddress) return alert("Please fill contract address");
-    setMinting(true);
-    setToast(null);
-    try{
+  async function mintNFT() {
+    if (!account || !contractAddress) {
+      alert('Please connect wallet and input contract address!')
+      return
+    }
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
       const abi = [
-        "function safeMint(address to, string memory tokenURI) public returns (uint256)",
-        "function mint(address to, string memory tokenURI) public returns (uint256)",
-        "function mintToken(address to, string memory tokenURI) public returns (uint256)",
-        "function mintNFT(address to, string memory tokenURI) public returns (uint256)"
-      ];
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      const to = address || (await signer.getAddress());
-      let tx;
-      const variants = ["safeMint","mint","mintToken","mintNFT"];
-      let called = false;
-      for(const fn of variants){
-        try{
-          if(contract[fn]){
-            tx = await contract[fn](to, imageUrl);
-            called = true;
-            break;
-          }
-        }catch(err){
-          console.warn("error calling",fn,err);
+        'function safeMint(address to, string memory uri) public',
+        'function mint(address to, string memory uri) public',
+        'function mintNFT(address to, string memory uri) public',
+      ]
+      const contract = new ethers.Contract(contractAddress, abi, signer)
+
+      let tx
+      try {
+        tx = await contract.safeMint(account, imageURL)
+      } catch {
+        try {
+          tx = await contract.mint(account, imageURL)
+        } catch {
+          tx = await contract.mintNFT(account, imageURL)
         }
       }
-      if(!called){
-        throw new Error("No supported mint function found.");
-      }
-      setToast({status:"pending", msg:"Transaction submitted: " + tx.hash});
-      await tx.wait();
-      setToast({status:"success", msg:"Mint succeeded: " + tx.hash});
-    }catch(e){
-      console.error(e);
-      setToast({status:"error", msg: "Mint failed: " + (e.message||e)});
-    }finally{
-      setMinting(false);
-      setTimeout(()=>setToast(null),15000);
+      setTxHash(tx.hash)
+      alert('✅ Mint success! Tx: ' + tx.hash)
+    } catch (err) {
+      console.error(err)
+      alert('❌ Mint failed: ' + err.message)
     }
+  }
+
+  function shorten(addr) {
+    return addr ? addr.slice(0, 6) + '...' + addr.slice(-4) : ''
   }
 
   return (
-    <div className="app">
-      <div className="header">
-        <div className="brand">Zama Mint DApp (Dynamic SDK)</div>
-        <div>
-          {address ? (
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <button className="wallet-btn" onClick={()=>setShowWalletModal(v=>!v)}>{truncate(address)}</button>
-              {showWalletModal && (
-                <div className="modal">
-                  <div className="small">Connected: <strong>{address}</strong></div>
-                  <div style={{height:8}}/>
-                  <button className="wallet-btn" onClick={()=>{disconnect();setShowWalletModal(false);}}>Disconnect</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button className="wallet-btn" onClick={connect}>Connect MetaMask</button>
-          )}
-        </div>
-      </div>
-
-      <div style={{display:"flex",gap:20}}>
-        <div>
-          <img src={imageUrl||"/cat.png"} alt="nft" className="cat"/>
-        </div>
-        <div style={{flex:1}}>
-          <div className="small">Contract Address</div>
-          <input className="input" placeholder="0x..." value={contractAddress} onChange={(e)=>setContractAddress(e.target.value)}/>
-          <div style={{height:10}}/>
-          <div className="small">NFT Image URL (or leave default)</div>
-          <input className="input" placeholder="https://..." value={imageUrl} onChange={(e)=>setImageUrl(e.target.value)}/>
-          <div style={{height:18}}/>
-          <div className="actions">
-            <button className="mint-btn" disabled={!address || minting} onClick={mint}>
-              {minting ? "Minting..." : "Mint"}
+    <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
+      <h2>Zama Mint NFT DApp</h2>
+      <div style={{ position: 'absolute', top: 10, right: 20 }}>
+        {account ? (
+          <div>
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {shorten(account)}
             </button>
-            {!address && <div className="small">Connect wallet to enable mint</div>}
+            {showMenu && (
+              <div style={{ position: 'absolute', right: 0, background: '#fff', border: '1px solid #ccc', padding: '5px' }}>
+                <button onClick={() => { setAccount(null); setShowMenu(false) }}>Disconnect</button>
+              </div>
+            )}
           </div>
-          <div style={{marginTop:18}} className="small">
-            {relayerLoaded ? "Zama SDK loaded dynamically ✅" : "Zama SDK not loaded yet ⚙️"}
-          </div>
-        </div>
+        ) : (
+          <button onClick={connectWallet}>Connect MetaMask</button>
+        )}
       </div>
 
-      {toast && (
-        <div className="footer-toast">
-          <div style={{fontWeight:700}}>{toast.status}</div>
-          <div style={{marginTop:6}}>{toast.msg}</div>
+      <img src={imageURL} alt="NFT Preview" width="300" style={{ borderRadius: '10px', marginTop: '40px' }} />
+
+      <div style={{ marginTop: '20px' }}>
+        <input
+          type="text"
+          placeholder="Contract address"
+          value={contractAddress}
+          onChange={e => setContractAddress(e.target.value)}
+          style={{ width: '300px', marginBottom: '10px', display: 'block' }}
+        />
+        <input
+          type="text"
+          placeholder="NFT image URL"
+          value={imageURL}
+          onChange={e => setImageURL(e.target.value)}
+          style={{ width: '300px', marginBottom: '10px', display: 'block' }}
+        />
+        <button disabled={!account} onClick={mintNFT}>
+          Mint NFT
+        </button>
+      </div>
+
+      {txHash && (
+        <div style={{ position: 'fixed', bottom: 10, right: 10, background: '#e0ffe0', padding: '10px', borderRadius: '6px' }}>
+          ✅ Minted successfully!<br />
+          Tx: {shorten(txHash)}
         </div>
       )}
     </div>
-  );
+  )
 }
