@@ -1,24 +1,19 @@
-# 🧠 Zama Mint DApp (Full SDK Version)
+# Zama NFT DApp
 
-This React + Vite DApp integrates **@zama-fhe/relayer-sdk/bundle** with automatic initialization on **Sepolia**.
+A React-based decentralized app integrating Zama Relayer SDK.
 
-## 🪄 Features
-- Connect MetaMask (shows short address + disconnect option)
-- Fill contract address + image URL
-- Mint NFT (calls `safeMint` / `mint` / `mintNFT` automatically)
-- Zama SDK auto-initialized using `SepoliaConfig`
-- Vercel-compatible (no build issues)
+## Features
+- Connect wallet (MetaMask)
+- Display address and disconnect option
+- Mint NFT (enter contract + image URL)
+- Show success tx toast
 
-## 🚀 Local Development
+## Run locally
 ```bash
 npm install
 npm run dev
 ```
-Then open [http://localhost:5173](http://localhost:5173)
 
-## 🌐 Deploy to Vercel
+## Deploy on Vercel
 - Build Command: `npm run build`
 - Output Directory: `dist`
-
-## ⚙️ Notes
-You can modify `App.jsx` to interact with your own smart contract and customize the relayer configuration.
