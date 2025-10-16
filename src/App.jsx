@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk';
+import { createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk/dist/index.js';
+
 
 const NFT_CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS_HERE';
 const NFT_ABI = [
