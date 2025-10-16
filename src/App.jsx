@@ -1,102 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
-import RelayerSdk from '@zama-fhe/relayer-sdk';
+import React, { useState } from "react";
+import { ethers } from "ethers";
+import { Relayer } from "@zama-fhe/relayer-sdk";
 
-const NFT_CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS_HERE';
-const NFT_ABI = [
-  { inputs: [{ internalType: 'address', name: 'to', type: 'address' }], name: 'mint', outputs: [], stateMutability: 'nonpayable', type: 'function' },
-  { inputs: [], name: 'nextTokenId', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function' }
-];
-
-export default function App() {
+const App = () => {
+  const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
-  const [signer, setSigner] = useState(null);
-  const [contract, setContract] = useState(null);
-  const [fheInstance, setFheInstance] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [minted, setMinted] = useState([]);
+  const [minting, setMinting] = useState(false);
 
-  useEffect(() => {
-    const initFHE = async () => {
-      const instance = await RelayerSdk.createInstance(RelayerSdk.SepoliaConfig);
-      setFheInstance(instance);
-    };
-    initFHE();
-  }, []);
+  const NFT_CONTRACT_ADDRESS = "YOUR_NFT_CONTRACT_ADDRESS_HERE";
+  const NFT_IMAGE_URL = "";
 
   const connectWallet = async () => {
-    if (!window.ethereum) return alert('Please install MetaMask!');
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send('eth_requestAccounts', []);
-      const s = await provider.getSigner();
-      const addr = await s.getAddress();
-      setAccount(addr);
-      setSigner(s);
-      const c = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, s);
-      setContract(c);
-      fetchMintedNFTs(c);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to connect wallet.');
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        setProvider(new ethers.BrowserProvider(window.ethereum));
+        setAccount(accounts[0]);
+      } catch (err) {
+        console.error("Wallet connection error:", err);
+      }
+    } else {
+      alert("Please install MetaMask first!");
     }
   };
 
   const mintNFT = async () => {
-    if (!contract) return;
-    setLoading(true);
+    if (!account) return;
+    setMinting(true);
     try {
-      if (fheInstance) {
-        const encryptedMessage = await fheInstance.encrypt('Hello NFT!');
-        console.log('Encrypted message:', encryptedMessage);
-      }
-      const tx = await contract.mint(account);
+      const relayer = new Relayer({ signer: provider.getSigner() });
+      const tx = await relayer.mintNFT({
+        contractAddress: NFT_CONTRACT_ADDRESS,
+        to: account,
+        metadataURI:
+          NFT_IMAGE_URL ||
+          "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='300' height='300' fill='%23724bff'/></svg>",
+      });
+      console.log("Mint tx:", tx);
       await tx.wait();
-      alert('Mint success!');
-      fetchMintedNFTs(contract);
+      alert("🎉 NFT Mint Successful!");
     } catch (err) {
-      console.error(err);
-      alert('Mint failed!');
-    }
-    setLoading(false);
-  };
-
-  const fetchMintedNFTs = async (c) => {
-    if (!c) return;
-    try {
-      const total = await c.nextTokenId();
-      const nfts = [];
-      for (let i = 0; i < total; i++) {
-        nfts.push({ id: i, imageUrl: 'https://placekitten.com/200/200' });
-      }
-      setMinted(nfts);
-    } catch (err) {
-      console.error(err);
+      console.error("Minting error:", err);
+      alert("Mint failed.");
+    } finally {
+      setMinting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 p-6">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold mb-6">FHE NFT DApp</h1>
-        {!account ? (
-          <button onClick={connectWallet} className="w-full mb-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">Connect Wallet</button>
-        ) : (
-          <p className="mb-4 font-medium text-gray-700">Connected: {account}</p>
-        )}
-        <button onClick={mintNFT} disabled={!account || loading} className={`w-full px-6 py-3 font-semibold rounded-lg transition ${account ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-400 text-gray-200 cursor-not-allowed'}`}>{loading ? 'Minting...' : 'Mint NFT'}</button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-800 via-indigo-900 to-black flex flex-col items-center justify-center text-white p-6">
+      <h1 className="text-5xl font-extrabold mb-8 drop-shadow-lg">🧬 FHE NFT DApp</h1>
+
+      <div className="relative group">
+        <div className="w-80 h-80 rounded-2xl overflow-hidden shadow-2xl border-2 border-purple-400 transform group-hover:scale-105 transition duration-300">
+          <img
+            src={
+              NFT_IMAGE_URL ||
+              "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='300' height='300' fill='%232b1f4f'/></svg>"
+            }
+            alt="NFT Preview"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="absolute inset-0 rounded-2xl bg-purple-500/20 blur-2xl opacity-0 group-hover:opacity-100 transition duration-500"></div>
       </div>
 
-      {minted.length > 0 && (
-        <div className="mt-8 w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {minted.map((nft) => (
-            <div key={nft.id} className="bg-white p-4 rounded-lg shadow flex flex-col items-center">
-              <img src={nft.imageUrl} alt={`NFT #${nft.id}`} className="w-full h-40 object-cover rounded mb-2" />
-              <p className="font-bold">Token #{nft.id}</p>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col md:flex-row gap-4 mt-10">
+        <button
+          onClick={connectWallet}
+          className="px-8 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-lg font-semibold hover:scale-105 hover:shadow-[0_0_25px_#a855f7] transition-all duration-300"
+        >
+          {account ? "✅ Wallet Connected" : "🔗 Connect Wallet"}
+        </button>
+
+        <button
+          onClick={mintNFT}
+          disabled={!account || minting}
+          className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
+            !account
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-gradient-to-r from-cyan-400 to-blue-600 hover:scale-105 hover:shadow-[0_0_25px_#22d3ee]"
+          }`}
+        >
+          {minting ? "⏳ Minting..." : "💎 Mint NFT"}
+        </button>
+      </div>
+
+      {account && (
+        <p className="mt-6 text-gray-300 text-sm">
+          Connected: {account.slice(0, 6)}...{account.slice(-4)}
+        </p>
       )}
+
+      <footer className="mt-10 text-gray-500 text-xs">
+        Powered by Zama FHE • EVM Privacy Tech
+      </footer>
     </div>
   );
-}
+};
+
+export default App;
