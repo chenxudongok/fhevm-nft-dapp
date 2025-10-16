@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { ethers } from "ethers";
 import { Relayer } from "@zama-fhe/relayer-sdk";
 
-const NFT_CONTRACT_ADDRESS = ""; // ← 填写你的 NFT 合约地址
-const NFT_IMAGE_URL = ""; // ← 填写 NFT 图片 URL（留空时用渐变背景）
+const NFT_CONTRACT_ADDRESS = ""; // ← 填你的 NFT 合约地址
+const NFT_IMAGE_URL = ""; // ← 填 NFT 图片 URL（留空时用渐变背景）
 
 export default function App() {
   const [walletAddress, setWalletAddress] = useState(null);
@@ -63,10 +63,12 @@ export default function App() {
       </h1>
 
       <div
-        className={\`w-72 h-72 rounded-2xl shadow-2xl mb-8 transition-all duration-500 \${NFT_IMAGE_URL
-          ? "bg-cover bg-center"
-          : "bg-gradient-to-br from-purple-400 to-pink-500"}\`}
-        style={NFT_IMAGE_URL ? { backgroundImage: \`url(\${NFT_IMAGE_URL})\` } : {}}
+        className={`w-72 h-72 rounded-2xl shadow-2xl mb-8 transition-all duration-500 ${
+          NFT_IMAGE_URL
+            ? "bg-cover bg-center"
+            : "bg-gradient-to-br from-purple-400 to-pink-500"
+        }`}
+        style={NFT_IMAGE_URL ? { backgroundImage: `url(${NFT_IMAGE_URL})` } : {}}
       ></div>
 
       <div className="flex gap-6">
@@ -81,9 +83,11 @@ export default function App() {
           <button
             onClick={mintNFT}
             disabled={loading}
-            className={\`px-8 py-3 rounded-full font-bold shadow-md transition-all \${loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-500 hover:bg-green-400"}\`}
+            className={`px-8 py-3 rounded-full font-bold shadow-md transition-all ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-400"
+            }`}
           >
             {loading ? "铸造中..." : "Mint NFT 💎"}
           </button>
