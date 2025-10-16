@@ -12,7 +12,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "ethers": "^6.9.0",
-    "fhevm": "github:ZamaAI/fhevm"
+    "fhevm": "https://github.com/zama-ai/fhevm.git"
   },
   "devDependencies": {
     "tailwindcss": "^3.3.3",
