@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ethers } from "ethers";
 
 const NFT_IMAGE_URL = ""; // 填 NFT 图片 URL
-const BACKEND_URL = "http://localhost:3001/api/mint"; // 部署后改成实际地址
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "/api/mint";
 
 export default function App() {
   const [walletAddress, setWalletAddress] = useState(null);
