@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { createInstance, SepoliaConfig } from '@zama-fhe/relayer-sdk/dist/index.js';
-
+import RelayerSdk from '@zama-fhe/relayer-sdk';
 
 const NFT_CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS_HERE';
-const NFT_ABI = [
-  { inputs: [{ internalType: 'address', name: 'to', type: 'address' }], name: 'mint', outputs: [], stateMutability: 'nonpayable', type: 'function' },
-  { inputs: [], name: 'nextTokenId', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function' }
-];
+const NFT_ABI = [ /* ABI */ ];
+
+export default function App() {
+  const [account, setAccount] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [fheInstance, setFheInstance] = useState(null);
+
+  useEffect(() => {
+    const initFHE = async () => {
+      const instance = await RelayerSdk.createInstance(RelayerSdk.SepoliaConfig);
+      setFheInstance(instance);
+    };
+    initFHE();
+  }, []);
+
+  // 后面 connectWallet、mintNFT、fetchMintedNFTs 不变
+}
+
 
 export default function App() {
   const [account, setAccount] = useState(null);
