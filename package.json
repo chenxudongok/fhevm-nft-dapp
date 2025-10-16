@@ -3,7 +3,7 @@
   "name": "fhevm-nft-dapp",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://your-github-username.github.io/fhevm-nft-dapp",
+  "homepage": "https://chenxudongok.github.io/fhevm-nft-dapp",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
