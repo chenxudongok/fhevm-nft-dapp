@@ -19,7 +19,7 @@ const ABI = [
   }
 ];
 
-const NFT_NAME = "ZamaPuff";
+const NFT_NAME = "Zama-Beyond: Two Souls";
 const NFT_DESC = "The official ZAMA mascot NFT, symbolizing wisdom and curiosity, a unique digital collectible.";
 const catImage = "https://i.imgur.com/YUeySct.png";
 
@@ -35,13 +35,13 @@ function App() {
   const [toast, setToast] = useState("");
   const { width, height } = useWindowSize();
 
+  // 初始化 Zama SDK
   useEffect(() => {
     const loadFHE = async () => {
       if (!window.startFHE) {
         console.error("Zama SDK loader not found");
         return;
       }
-
       try {
         await window.startFHE();
         fheInstance = window.fheInstance;
@@ -50,7 +50,6 @@ function App() {
         console.error("加载 Zama SDK 失败:", err);
       }
     };
-
     loadFHE();
   }, []);
 
@@ -82,8 +81,8 @@ function App() {
 
     setMinting(true);
     setProgress(0);
-    setToast("Encrypting data, please wait...");
-    setTimeout(() => setToast(""), 10000);
+    setToast("Encrypting and preparing transaction...");
+    setTimeout(() => setToast(""), 20000);
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -124,63 +123,169 @@ function App() {
     }
   };
 
+  
   return (
-    <div style={{ textAlign:"center", padding:"2rem", position:"relative" }}>
+    <div style={{ textAlign:"center", padding:"2rem", position:"relative", fontFamily: "Arial, sans-serif" }}>
       {showFireworks && <Confetti width={width} height={height} />}
-      {toast && (
-        <div style={{
-          position: "fixed",
-          top: "1rem",
-          left: "50%",
-          transform: "translateX(-50%)",
-          backgroundColor: "#333",
-          color: "#fff",
-          padding: "0.8rem 1.5rem",
-          borderRadius: "0.5rem",
-          zIndex: 1000,
-        }}>
-          {toast}
-        </div>
-      )}
+
+      {/* 钱包按钮 */}
       <div style={{ position:"absolute", top:"1rem", right:"1rem" }}>
         <button
-          style={{ padding:"0.3rem 0.8rem", borderRadius:"0.5rem", cursor:"pointer" }}
-          onClick={walletAddress ? disconnectWallet : connectWallet}>
-          {walletAddress ? shortenAddress(walletAddress) : "Connect Wallet"}
+          style={{
+            padding:"0.5rem 1rem",
+            borderRadius:"1rem",
+            cursor: walletAddress ? "pointer" : "pointer",
+            border:"none",
+            backgroundColor: walletAddress ? "#ff4d4f" : "#4caf50",
+            color:"#fff",
+            fontWeight: "600",
+            boxShadow: "0 3px 8px rgba(0,0,0,0.2)",
+            transition: "all 0.2s ease-in-out",
+          }}
+          onClick={walletAddress ? disconnectWallet : connectWallet}
+          onMouseEnter={e => e.currentTarget.style.transform="scale(1.05)"}
+          onMouseLeave={e => e.currentTarget.style.transform="scale(1)"}
+        >
+          {walletAddress ? "Disconnect" : "Connect Wallet"}
         </button>
       </div>
 
-      <h1>ZAMA NFT DApp</h1>
-      <h2>{NFT_NAME}</h2>
+      {/* 顶部文字 */}
+      <div style={{ position: "relative", zIndex: 1, paddingTop: "1rem" }}>
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          style={{
+            fontSize: "4rem",
+            fontWeight: "800",
+            background: "linear-gradient(90deg, #ff6a00, #ee0979, #00f260, #0575e6)",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            marginBottom: "0.5rem",
+            textShadow: "0 4px 10px rgba(0,0,0,0.3)"
+          }}
+        >
+          ZAMA NFT DApp
+        </motion.h1>
 
-      <motion.img
-        src={catImage}
-        alt="cat"
-        style={{ width:300, height:300, borderRadius:"1rem" }}
-        initial={{ opacity:0, scale:0.8 }}
-        animate={{ opacity:1, scale:1 }}
-        transition={{ duration:0.5 }}
-      />
+        <motion.h2
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2 }}
+          style={{
+            fontSize: "2rem",
+            fontWeight: "700",
+            color: "#2b65c9ff",
+            marginTop: 0,
+            textShadow: "0 3px 8px rgba(0,0,0,0.4)",
+            fontStyle: "italic",
+            letterSpacing: "1px"
+          }}
+        >
+          {NFT_NAME}
+        </motion.h2>
 
-      <p style={{ maxWidth:"400px", margin:"0.5rem auto" }}>{NFT_DESC}</p>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.5 }}
+          style={{
+            maxWidth: "500px",
+            margin: "0.5rem auto",
+            fontSize: "1.1rem",
+            color: "#030303ff",
+            lineHeight: 1.6,
+            fontWeight: "500",
+            textShadow: "0 2px 6px rgba(0,0,0,0.25)"
+          }}
+        >
+          The official ZAMA mascot NFT, symbolizing <span style={{ color: "#ff6a00", fontWeight: "700" }}>wisdom</span> and <span style={{ color: "#0575e6", fontWeight: "700" }}>curiosity</span>, a unique digital collectible for the blockchain era.
+        </motion.p>
+      </div>
 
+    {/* 图片 + 外框 + 动画 */}
+<motion.div
+  initial={{ scale: 0.8, opacity: 0 }}
+  animate={{ scale: 1, opacity: 1 }}
+  transition={{ duration: 0.8, ease: "easeOut" }}
+  style={{
+    display: "inline-block",
+    padding: "12px",
+    borderRadius: "1.5rem",
+    background: "linear-gradient(135deg, #ff6a00, #ee0979, #00f260, #0575e6)",
+    boxShadow: "0 0 30px rgba(255, 105, 180, 0.7), 0 0 40px rgba(0, 242, 255, 0.6)",
+    position: "relative",
+    marginTop: "1rem",
+    animation: "glowRotate 5s linear infinite"
+  }}
+>
+  <motion.img
+    src={catImage}
+    alt="cat"
+    style={{ width: 300, height: 300, borderRadius: "1rem", display: "block" }}
+    initial={{ scale: 0.95 }}
+    animate={{ scale: [1, 0.98, 1] }}
+    transition={{ duration: 2, repeat: Infinity, repeatType: "loop", ease: "easeInOut" }}
+  />
+</motion.div>
+
+      {/* Mint 按钮 */}
       {!showFireworks && (
-        <div style={{ marginTop:"1rem" }}>
+        <div style={{ marginTop:"1.5rem", textAlign: "center" }}>
           <button
-            style={{ padding:"0.5rem 1.5rem", fontSize:"1rem", borderRadius:"0.5rem", cursor:"pointer" }}
+            style={{
+              padding:"0.8rem 2rem",
+              fontSize:"1rem",
+              borderRadius:"1rem",
+              cursor: !walletAddress || !fheReady || minting ? "not-allowed" : "pointer",
+              border:"none",
+              backgroundColor: !walletAddress || !fheReady || minting ? "#a0a0a0" : "#1890ff",
+              color:"#fff",
+              fontWeight: "600",
+              boxShadow: !walletAddress || !fheReady || minting ? "none" : "0 4px 12px rgba(0,0,0,0.25)",
+              transition: "all 0.2s ease-in-out",
+            }}
             onClick={handleMint}
-            disabled={!walletAddress || !fheReady || minting}>
+            disabled={!walletAddress || !fheReady || minting}
+            onMouseEnter={e => {
+              if (!e.currentTarget.disabled) e.currentTarget.style.transform="scale(1.05)";
+            }}
+            onMouseLeave={e => e.currentTarget.style.transform="scale(1)"}
+          >
             {minting ? `Minting... ${progress}%` : "Mint ZAMA-NFT"}
           </button>
+
+          {/* Toast 精确显示在按钮下方 */}
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              style={{
+                marginTop: "0.8rem",
+                backgroundColor: "#222",
+                color: "#fff",
+                padding: "0.6rem 1.2rem",
+                borderRadius: "0.75rem",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                fontWeight: "200",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {toast}
+            </motion.div>
+          )}
         </div>
       )}
 
+      {/* Mint 成功 */}
       {showFireworks && (
-        <div style={{ marginTop:"1rem" }}>
-          <h2>Mint Success!</h2>
+        <div style={{ marginTop:"1.5rem" }}>
+          <h2 style={{ color:"#52c41a" }}>Mint Success!</h2>
           {txHash && (
             <p>
-              Transaction: <a href={`https://sepolia.etherscan.io/tx/${txHash}`} target="_blank" rel="noopener noreferrer">{txHash}</a>
+              Transaction: <a href={`https://sepolia.etherscan.io/tx/${txHash}`} target="_blank" rel="noopener noreferrer" style={{ color:"#1890ff", textDecoration:"underline" }}>{txHash}</a>
             </p>
           )}
         </div>
