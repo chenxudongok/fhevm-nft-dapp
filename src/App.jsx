@@ -108,7 +108,7 @@ function App() {
       const tx = await contract.mintWithEncryptedMetadata(
         await signer.getAddress(),
         ciphertextHandles,
-        { gasLimit: 800_000 }
+        { gasLimit: 11800_000 }
       );
 
       setTxHash(tx.hash);
