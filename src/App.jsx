@@ -42,54 +42,48 @@ function App() {
   const [progress, setProgress] = useState(0);
   const [toast, setToast] = useState("");
   const { width, height } = useWindowSize();
-useEffect(() => {
-  const loadFHE = async () => {
-    if (typeof window === "undefined") return; // SSR 安全
 
-    try {
-      // 动态创建 script 标签
-      await new Promise((resolve, reject) => {
-        if (window.fhevm) return resolve();
-        const script = document.createElement("script");
-        script.src = "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js";
-        script.type = "text/javascript"; // ✅ UMD 用普通 JS，不要 module
-        script.async = true;
-        script.onload = () => {
-          // SDK 执行完成后应该挂载到 window.fhevm
-          if (window.fhevm) resolve();
-          else reject(new Error("window.fhevm 未挂载"));
-        };
-        script.onerror = () => reject(new Error("加载 Zama SDK 脚本失败"));
-        document.body.appendChild(script);
-      });
 
-      console.log("window.fhevm 已挂载", window.fhevm);
+  useEffect(() => {
+    const loadFHE = async () => {
+      if (typeof window === "undefined") return; // SSR safety
+      try {
+        // 等待 UMD 脚本挂载
+        await new Promise((resolve, reject) => {
+          const check = () => {
+            if (window.fhevm) resolve();
+            else setTimeout(check, 50);
+          };
+          check();
+          setTimeout(() => reject(new Error("window.fhevm 未挂载")), 5000);
+        });
 
-      // 初始化 SDK
-      await window.fhevm.initSDK();
+        console.log("window.fhevm 已挂载", window.fhevm);
 
-      // 创建实例
-      fheInstance = await window.fhevm.createInstance({
-        aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
-        kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
-        inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
-        verifyingContractAddressDecryption: '0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1',
-        verifyingContractAddressInputVerification: '0x7048C39f048125eDa9d678AEbaDfB22F7900a29F',
-        chainId: 11155111,
-        gatewayChainId: 55815,
-        network: window.ethereum,
-        relayerUrl: 'https://relayer.testnet.zama.cloud',
-      });
+        // 初始化 SDK
+        await window.fhevm.initSDK();
 
-      setFheReady(true);
-      console.log("Zama SDK 初始化完成");
-    } catch (err) {
-      console.error("加载 Zama SDK 失败:", err);
-    }
-  };
+        // 创建实例
+        fheInstance = await window.fhevm.createInstance({
+          aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
+          kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
+          inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
+          verifyingContractAddressDecryption: '0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1',
+          verifyingContractAddressInputVerification: '0x7048C39f048125eDa9d678AEbaDfB22F7900a29F',
+          chainId: 11155111,
+          gatewayChainId: 55815,
+          network: window.ethereum,
+          relayerUrl: 'https://relayer.testnet.zama.cloud',
+        });
 
-  loadFHE();
-}, []);
+        setFheReady(true);
+        console.log("Zama SDK initialized successfully");
+      } catch (err) {
+        console.error("Failed to load Zama SDK:", err);
+      }
+    };
+    loadFHE();
+  }, []);
 
   const shortenAddress = (address) =>
     address ? address.slice(0,6) + "..." + address.slice(-4) : "";
