@@ -43,29 +43,35 @@ function App() {
   const [toast, setToast] = useState("");
   const { width, height } = useWindowSize();
 
-useEffect(() => {
-  const loadFHE = async () => {
-    try {
-      await window.initSDK();
-      fheInstance = await window.createInstance({
-        aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
-        kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
-        inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
-        verifyingContractAddressDecryption: '0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1',
-        verifyingContractAddressInputVerification: '0x7048C39f048125eDa9d678AEbaDfB22F7900a29F',
-        chainId: 11155111,
-        gatewayChainId: 55815,
-        network: window.ethereum,
-        relayerUrl: 'https://relayer.testnet.zama.cloud',
-      });
-      setFheReady(true);
-      console.log("Zama SDK 初始化完成");
-    } catch(err) {
-      console.error("加载 Zama SDK 失败:", err);
-    }
-  };
-  loadFHE();
-}, []);
+  useEffect(() => {
+    const loadFHE = async () => {
+      try {
+        const { initSDK, createInstance } = await import(
+          "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js"
+        );
+
+        await initSDK();
+
+        fheInstance = await createInstance({
+          aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
+          kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
+          inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
+          verifyingContractAddressDecryption: '0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1',
+          verifyingContractAddressInputVerification: '0x7048C39f048125eDa9d678AEbaDfB22F7900a29F',
+          chainId: 11155111,
+          gatewayChainId: 55815,
+          network: window.ethereum,
+          relayerUrl: 'https://relayer.testnet.zama.cloud',
+        });
+
+        setFheReady(true);
+        console.log("Zama SDK initialized");
+      } catch (err) {
+        console.error("Failed to load Zama SDK:", err);
+      }
+    };
+    loadFHE();
+  }, []);
 
   const shortenAddress = (address) =>
     address ? address.slice(0,6) + "..." + address.slice(-4) : "";
