@@ -3,18 +3,26 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
+    "@zama-fhe/relayer-sdk": "^0.2.0",
+    "assert": "^2.1.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
     "ethers": "^6.15.0",
     "framer-motion": "^10.12.16",
+    "globalthis": "^1.0.4",
+    "process": "^0.11.10",
+    "react": "^18.2.0",
     "react-confetti": "^6.1.0",
-    "react-use": "^17.4.0"
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "react-use": "^17.4.0",
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "dev": "react-scripts start",
-    "build": "react-scripts build"
+    "start": "craco start",
+    "build": "craco build",
+    "dev": "craco start"
   },
   "browserslist": {
     "production": [
@@ -27,5 +35,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@craco/craco": "^7.1.0"
   }
 }
