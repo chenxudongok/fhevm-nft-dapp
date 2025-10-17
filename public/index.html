@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-  <script
-  src="https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.umd.cjs"
-  type="text/javascript"
-></script>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZAMA NFT DApp</title>
-</head>
-<body>
-  <div id="root"></div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZAMA NFT DApp</title>
+    <script type="module">
+      import { initSDK, createInstance, SepoliaConfig } from 'https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js';
+
+      // 挂载全局启动函数
+      window.startFHE = async () => {
+        await initSDK();
+        const config = { ...SepoliaConfig, network: window.ethereum };
+        window.fheInstance = await createInstance(config);
+        console.log("Zama SDK initialized", window.fheInstance);
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

@@ -23,14 +23,6 @@ const NFT_NAME = "ZamaPuff";
 const NFT_DESC = "The official ZAMA mascot NFT, symbolizing wisdom and curiosity, a unique digital collectible.";
 const catImage = "https://i.imgur.com/YUeySct.png";
 
-const SEPOLIA_PARAMS = {
-  chainId: "0xaa36a7",
-  chainName: "Sepolia Test Network",
-  nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: ["https://rpc.sepolia.org"],
-  blockExplorerUrls: ["https://sepolia.etherscan.io"]
-};
-
 let fheInstance = null;
 
 function App() {
@@ -45,31 +37,20 @@ function App() {
 
   useEffect(() => {
     const loadFHE = async () => {
+      if (!window.startFHE) {
+        console.error("Zama SDK loader not found");
+        return;
+      }
+
       try {
-        const { initSDK, createInstance } = await import(
-          "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js"
-        );
-
-        await initSDK();
-
-        fheInstance = await createInstance({
-          aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
-          kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
-          inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
-          verifyingContractAddressDecryption: '0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1',
-          verifyingContractAddressInputVerification: '0x7048C39f048125eDa9d678AEbaDfB22F7900a29F',
-          chainId: 11155111,
-          gatewayChainId: 55815,
-          network: window.ethereum,
-          relayerUrl: 'https://relayer.testnet.zama.cloud',
-        });
-
+        await window.startFHE();
+        fheInstance = window.fheInstance;
         setFheReady(true);
-        console.log("Zama SDK initialized");
       } catch (err) {
-        console.error("Failed to load Zama SDK:", err);
+        console.error("加载 Zama SDK 失败:", err);
       }
     };
+
     loadFHE();
   }, []);
 
@@ -81,22 +62,6 @@ function App() {
   const connectWallet = async () => {
     if (!window.ethereum) { alert("Please install MetaMask!"); return; }
     try {
-      const chainId = await window.ethereum.request({ method: "eth_chainId" });
-      if (chainId !== SEPOLIA_PARAMS.chainId) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: SEPOLIA_PARAMS.chainId }]
-          });
-        } catch (switchError) {
-          if(switchError.code === 4902){
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [SEPOLIA_PARAMS]
-            });
-          } else { throw switchError; }
-        }
-      }
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       setWalletAddress(accounts[0]);
     } catch(err) {
@@ -118,8 +83,7 @@ function App() {
     setMinting(true);
     setProgress(0);
     setToast("Encrypting data, please wait...");
-
-    setTimeout(() => setToast(""), 10000); // Toast disappears after 10s
+    setTimeout(() => setToast(""), 10000);
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -133,14 +97,11 @@ function App() {
       for (let i = 0; i < encodedText.length; i += chunkSize) {
         const chunk = encodedText.slice(i, i + chunkSize);
         const buffer = fheInstance.createEncryptedInput(CONTRACT_ADDRESS, await signer.getAddress());
-
         for (let j = 0; j < chunk.length; j++) {
           buffer.add64(BigInt(chunk[j]));
         }
-
         const ciphertext = await buffer.encrypt();
         ciphertextHandles.push(...ciphertext.handles);
-
         setProgress(Math.min(100, Math.floor(((i + chunk.length) / encodedText.length) * 100)));
         await new Promise(resolve => setTimeout(resolve, 50));
       }
