@@ -42,26 +42,24 @@ function App() {
   const [progress, setProgress] = useState(0);
   const [toast, setToast] = useState("");
   const { width, height } = useWindowSize();
-
-  useEffect(() => {
+useEffect(() => {
   const loadFHE = async () => {
     if (typeof window === "undefined") return; // SSR 安全
+
     try {
       // 动态创建 script 标签
       await new Promise((resolve, reject) => {
         if (window.fhevm) return resolve();
         const script = document.createElement("script");
         script.src = "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js";
-        script.type = "module"; // 可以尝试去掉 module 改成 "text/javascript"
+        script.type = "text/javascript"; // ✅ UMD 用普通 JS，不要 module
         script.async = true;
         script.onload = () => {
-          // 等待一帧再resolve，确保挂载完成
-          requestAnimationFrame(() => {
-            if (window.fhevm) resolve();
-            else reject(new Error("window.fhevm 未挂载"));
-          });
+          // SDK 执行完成后应该挂载到 window.fhevm
+          if (window.fhevm) resolve();
+          else reject(new Error("window.fhevm 未挂载"));
         };
-        script.onerror = (err) => reject(new Error("加载 Zama SDK 脚本失败"));
+        script.onerror = () => reject(new Error("加载 Zama SDK 脚本失败"));
         document.body.appendChild(script);
       });
 
@@ -92,7 +90,6 @@ function App() {
 
   loadFHE();
 }, []);
-
 
   const shortenAddress = (address) =>
     address ? address.slice(0,6) + "..." + address.slice(-4) : "";
