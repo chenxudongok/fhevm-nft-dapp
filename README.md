@@ -1,81 +1,91 @@
-# ZAMA NFT DApp
+ZAMA NFT DApp
 
-这是一个基于 **React + Ethers.js** 的 ZAMA NFT DApp，用于在 **Sepolia 测试网**进行 NFT 铸造（Mint）。  
+ZAMA NFT DApp is a decentralized application built on the Ethereum Sepolia Test Network, allowing users to mint unique ZAMA mascot NFTs. Each NFT represents wisdom and curiosity, combining digital art with collectible value.
 
-## 功能说明
+Features
 
-- 连接 **MetaMask** 钱包（自动切换到 Sepolia 测试网）  
-- 显示钱包地址缩写（已连接时）  
-- 单个钱包可以 **无限量 Mint** ZAMA NFT  
-- Mint 成功后显示 **烟花动画 + 成功提示**  
-- 提供交易 Tx 链接，可直接跳转到 **Sepolia Etherscan**  
-- 显示 NFT 名称和介绍  
-- 使用公共 RPC 访问测试网  
+Connect Wallet
+Connect your wallet via MetaMask, with automatic network switching to Sepolia Test Network.
 
-## NFT 信息
+Decentralized Minting
+Mint ZAMA NFTs directly through the smart contract. Metadata is encrypted to ensure uniqueness and security.
 
-- 名称：**ZamaPuff**  
-- 描述：因为这是 ZAMA 吉祥物的 NFT，象征智慧与好奇心，独一无二的数字收藏品。  
-- 合约地址：`0x55832d181ea2e73c872884b499d8255f72f2e76a`  
-- 支持无限量 Mint  
+Smooth Interactive Experience
 
-## 项目结构
+React + Framer Motion for dynamic animations
 
+react-confetti celebrates successful minting
 
+ethers.js handles smart contract calls and real-time transaction status
 
-fhevm-nft-dapp/
-├─ public/
-│ └─ index.html
-├─ src/
-│ ├─ App.jsx
-│ ├─ index.jsx
-│ └─ index.css
-├─ package.json
-└─ README.md
+Transaction Explorer Links
+After minting, view the transaction hash and click to open it on the Sepolia blockchain explorer.
+
+Powered by Zama Relayer SDK
+Simplifies smart contract interactions and transaction handling, ensuring secure and efficient operations.
+
+Installation
+
+Clone the repository:
+
+git clone https://github.com/yourusername/fhevm-nft-dapp.git
+cd fhevm-nft-dapp
 
 
-## 安装依赖
+Install dependencies:
 
-确保已安装 **Node.js >= 18** 和 **npm**。
-
-```bash
 npm install
 
-启动本地开发服务器
-npm run dev
+
+Start the development server:
+
+npm start
 
 
-访问浏览器中显示的地址（例如 http://localhost:5173）即可使用
- DApp。
+Your DApp should now be running at http://localhost:3000.
 
-构建生产包
+Usage
+
+Install MetaMask and connect to the Sepolia Test Network.
+
+Open the DApp and click Connect Wallet.
+
+Click Mint ZAMA-NFT to mint your NFT.
+
+View the transaction hash and enjoy the confetti animation!
+
+Deployment on Vercel
+
+Make sure your package.json includes:
+
+"type": "module",
+"homepage": "."
+
+
+Build the project:
+
 npm run build
 
 
-构建完成后，生成 build/ 文件夹，可部署到 Vercel、Netlify 或任何静态网站托管。
+Deploy the build folder to Vercel as a static site.
 
-使用说明
+Known Issues
 
-打开 DApp
+Zama Relayer SDK Import Error:
 
-点击右上角 连接钱包
+Failed to resolve entry for package "@zama-fhe/relayer-sdk".
+The package may have incorrect main/module/exports specified in its package.json.
 
-自动切换到 Sepolia 测试网
 
-点击 Mint ZAMA-NFT
+Solution: Use ESM import instead of CommonJS:
 
-Mint 成功后显示烟花动画，并显示交易 Tx 链接
+import { Relayer } from "@zama-fhe/relayer-sdk";
 
-点击 Tx 链接可在 Sepolia Etherscan 查看交易详情
 
-注意事项
+Ensure your bundler (Vite, Webpack) supports package exports.
 
-DApp 仅支持 MetaMask 浏览器钱包
+Mint button may be disabled if MetaMask is not installed or the wallet is not connected.
 
-测试网 RPC：https://rpc.sepolia.org
+License
 
-Mint 功能在 测试网使用，不会在主网扣费
-
-联系
-
-如有问题，请联系 ZAMA NFT 开发团队。
+This project is MIT Licensed.
