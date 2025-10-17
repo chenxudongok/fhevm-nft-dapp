@@ -55,6 +55,7 @@ Simplifies smart contract interactions and transaction handling, ensuring secure
 
 Clone the repository:
 
+Contract address ：0x55832d181Ea2e73C872884B499D8255f72f2e76a
 
 Demo address ： https://fhevm-nft-dapp.vercel.app/
 
