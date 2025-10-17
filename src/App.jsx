@@ -7,7 +7,7 @@ function App() {
   const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
   const [contractAddress, setContractAddress] = useState('');
-  const [imageUrl, setImageUrl] = useState('https://pbs.twimg.com/profile_images/1654459351300468736/ywoKR9uZ_400x400.jpg');
+  const [imageUrl, setImageUrl] = useState('https://i.imgur.com/YUeySct.jpg');
   const [txHash, setTxHash] = useState(null);
   const [sdk, setSdk] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
