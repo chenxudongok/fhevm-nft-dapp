@@ -37,21 +37,29 @@ function App() {
 
   // 初始化 Zama SDK
   useEffect(() => {
-    const loadFHE = async () => {
-      if (!window.startFHE) {
-        console.error("Zama SDK loader not found");
-        return;
-      }
-      try {
-        await window.startFHE();
-        fheInstance = window.fheInstance;
-        setFheReady(true);
-      } catch (err) {
-        console.error("加载 Zama SDK 失败:", err);
-      }
-    };
+  const loadFHE = async () => {
+    if (!window.startFHE) {
+      console.error("Zama SDK loader not found");
+      return;
+    }
+    try {
+      await window.startFHE();
+      fheInstance = window.fheInstance;
+      setFheReady(true);
+      console.log("✅ Zama SDK Ready");
+    } catch (err) {
+      console.error("加载 Zama SDK 失败:", err);
+    }
+  };
+
+  // 等待 DOM Ready 再执行（防止 Vercel SSR 环境提前运行）
+  if (document.readyState === "complete") {
     loadFHE();
-  }, []);
+  } else {
+    window.addEventListener("load", loadFHE);
+    return () => window.removeEventListener("load", loadFHE);
+  }
+}, []);
 
   const shortenAddress = (address) =>
     address ? address.slice(0,6) + "..." + address.slice(-4) : "";
