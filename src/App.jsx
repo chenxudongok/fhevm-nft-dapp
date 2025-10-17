@@ -43,28 +43,16 @@ function App() {
   const [toast, setToast] = useState("");
   const { width, height } = useWindowSize();
 
-
   useEffect(() => {
     const loadFHE = async () => {
-      if (typeof window === "undefined") return; // SSR safety
       try {
-        // 等待 UMD 脚本挂载
-        await new Promise((resolve, reject) => {
-          const check = () => {
-            if (window.fhevm) resolve();
-            else setTimeout(check, 50);
-          };
-          check();
-          setTimeout(() => reject(new Error("window.fhevm 未挂载")), 10000);
-        });
+        const { initSDK, createInstance } = await import(
+          "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js"
+        );
 
-        console.log("window.fhevm 已挂载", window.fhevm);
+        await initSDK();
 
-        // 初始化 SDK
-        await window.fhevm.initSDK();
-
-        // 创建实例
-        fheInstance = await window.fhevm.createInstance({
+        fheInstance = await createInstance({
           aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
           kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
           inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
@@ -77,7 +65,7 @@ function App() {
         });
 
         setFheReady(true);
-        console.log("Zama SDK initialized successfully");
+        console.log("Zama SDK initialized");
       } catch (err) {
         console.error("Failed to load Zama SDK:", err);
       }
