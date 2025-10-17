@@ -42,12 +42,30 @@ function App() {
   const [progress, setProgress] = useState(0);
   const [toast, setToast] = useState("");
   const { width, height } = useWindowSize();
-
 useEffect(() => {
   const loadFHE = async () => {
+    if (typeof window === "undefined") return; // SSR 安全
     try {
+      // 动态创建 script 标签加载 SDK
+      await new Promise((resolve, reject) => {
+        if (window.fhevm) return resolve(); // 已经加载过了
+        const script = document.createElement("script");
+        script.src = "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js";
+        script.type = "module";
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = (err) => reject(new Error("加载 Zama SDK 脚本失败"));
+        document.body.appendChild(script);
+      });
+
+      // 等待 SDK 挂载到 window
+      if (!window.fhevm) throw new Error("window.fhevm 未定义");
+
+      // 初始化 SDK
       await window.fhevm.initSDK();
-      fheInstance = await window.createInstance({
+
+      // 创建实例
+      fheInstance = await window.fhevm.createInstance({
         aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
         kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
         inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
@@ -58,14 +76,17 @@ useEffect(() => {
         network: window.ethereum,
         relayerUrl: 'https://relayer.testnet.zama.cloud',
       });
+
       setFheReady(true);
       console.log("Zama SDK 初始化完成");
-    } catch(err) {
+    } catch (err) {
       console.error("加载 Zama SDK 失败:", err);
     }
   };
+
   loadFHE();
 }, []);
+
 
   const shortenAddress = (address) =>
     address ? address.slice(0,6) + "..." + address.slice(-4) : "";
