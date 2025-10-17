@@ -55,7 +55,7 @@ function App() {
             else setTimeout(check, 50);
           };
           check();
-          setTimeout(() => reject(new Error("window.fhevm 未挂载")), 5000);
+          setTimeout(() => reject(new Error("window.fhevm 未挂载")), 10000);
         });
 
         console.log("window.fhevm 已挂载", window.fhevm);
