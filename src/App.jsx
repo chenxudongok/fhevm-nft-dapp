@@ -43,61 +43,29 @@ function App() {
   const [toast, setToast] = useState("");
   const { width, height } = useWindowSize();
 
-
-  useEffect(() => {
-    const loadZamaSDK = async () => {
-      try {
-        // 动态加载脚本（仅在浏览器中）
-        if (!window.initSDK) {
-          const script = document.createElement("script");
-          script.src = "https://cdn.jsdelivr.net/npm/@zama-fhe/relayer-sdk@0.2.0/dist/relayer-sdk.umd.min.js";
-          script.async = true;
-
-          script.onload = async () => {
-            console.log("✅ Zama SDK 脚本加载成功");
-
-            // 确认 window.initSDK 已加载
-            if (window.initSDK) {
-              await window.initSDK();
-              window.fheInstance = await window.createInstance({
-                aclContractAddress: "0x687820221192C5B662b25367F70076A37bc79b6c",
-                kmsContractAddress: "0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC",
-                inputVerifierContractAddress: "0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4",
-                verifyingContractAddressDecryption: "0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1",
-                verifyingContractAddressInputVerification: "0x7048C39f048125eDa9d678AEbaDfB22F7900a29F",
-                chainId: 11155111,
-                gatewayChainId: 55815,
-                network: window.ethereum,
-                relayerUrl: "https://relayer.testnet.zama.cloud",
-              });
-
-              setFheReady(true);
-              console.log("✅ Zama SDK 初始化完成");
-            } else {
-              console.error("❌ Zama SDK 未正确挂载到 window");
-            }
-          };
-
-          script.onerror = () => {
-            console.error("❌ 加载 Zama SDK 脚本失败");
-          };
-
-          document.body.appendChild(script);
-        } else {
-          console.log("Zama SDK 已存在，直接初始化");
-          await window.initSDK();
-          setFheReady(true);
-        }
-      } catch (err) {
-        console.error("加载 Zama SDK 失败:", err);
-      }
-    };
-
-    if (typeof window !== "undefined") {
-      loadZamaSDK();
+useEffect(() => {
+  const loadFHE = async () => {
+    try {
+      await window.fhevm.initSDK();
+      fheInstance = await window.createInstance({
+        aclContractAddress: '0x687820221192C5B662b25367F70076A37bc79b6c',
+        kmsContractAddress: '0x1364cBBf2cDF5032C47d8226a6f6FBD2AFCDacAC',
+        inputVerifierContractAddress: '0xbc91f3daD1A5F19F8390c400196e58073B6a0BC4',
+        verifyingContractAddressDecryption: '0xb6E160B1ff80D67Bfe90A85eE06Ce0A2613607D1',
+        verifyingContractAddressInputVerification: '0x7048C39f048125eDa9d678AEbaDfB22F7900a29F',
+        chainId: 11155111,
+        gatewayChainId: 55815,
+        network: window.ethereum,
+        relayerUrl: 'https://relayer.testnet.zama.cloud',
+      });
+      setFheReady(true);
+      console.log("Zama SDK 初始化完成");
+    } catch(err) {
+      console.error("加载 Zama SDK 失败:", err);
     }
-  }, []);
-
+  };
+  loadFHE();
+}, []);
 
   const shortenAddress = (address) =>
     address ? address.slice(0,6) + "..." + address.slice(-4) : "";
