@@ -39,6 +39,9 @@ Start the development server:
 
 npm start
 
+<img width="1389" height="755" alt="image" src="https://github.com/user-attachments/assets/8ff70755-270c-4df4-87c2-387a1cc1c9f8" />
+
+
 
 Open your browser at http://localhost:3000.
 ```bash
