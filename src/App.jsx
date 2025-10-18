@@ -84,12 +84,20 @@ function App() {
     setShowFireworks(false);
     setTxHash(null);
   };
-if (!localStorage.getItem("page_refreshed_once")) {
+
+
+  // 仅在浏览器端执行，避免 SSR 阶段出错
+  if (typeof window === "undefined") return;
+
+  // 确保只刷新一次
+  const hasRefreshed = localStorage.getItem("page_refreshed_once");
+
+  if (!hasRefreshed) {
     localStorage.setItem("page_refreshed_once", "true");
 
+    // 等待 2 秒再刷新
     setTimeout(() => {
-      try {
-        // 清空浏览器缓存
+       // 清空浏览器缓存
         localStorage.clear();
         sessionStorage.clear();
 
@@ -105,10 +113,7 @@ if (!localStorage.getItem("page_refreshed_once")) {
 
         // 最后刷新页面
         window.location.reload();
-      } catch (err) {
-        console.error("Error clearing cache before reload:", err);
-      }
-    }, 2000); // 等待2秒后执行
+    }, 2000);
   }
 
   const handleMint = async () => {
