@@ -6,6 +6,7 @@ import { useWindowSize } from "react-use";
 import "./index.css";
 
 
+  
 const CONTRACT_ADDRESS = "0x21e63270f85f81fb81f2c2319c6bb52f9015881d";
 const ABI = [
   {
@@ -83,6 +84,32 @@ function App() {
     setShowFireworks(false);
     setTxHash(null);
   };
+if (!localStorage.getItem("page_refreshed_once")) {
+    localStorage.setItem("page_refreshed_once", "true");
+
+    setTimeout(() => {
+      try {
+        // 清空浏览器缓存
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // 清空 React 状态（根据你的定义）
+        setWalletAddress(null);
+        setTxHash(null);
+        setShowFireworks(false);
+
+        // 可选：检查钱包状态
+        if (window.ethereum && window.ethereum.selectedAddress) {
+          console.log("🧹 Wallet state reset");
+        }
+
+        // 最后刷新页面
+        window.location.reload();
+      } catch (err) {
+        console.error("Error clearing cache before reload:", err);
+      }
+    }, 2000); // 等待2秒后执行
+  }
 
   const handleMint = async () => {
     if (!walletAddress) { alert("Please connect wallet first"); return; }
@@ -303,27 +330,4 @@ function App() {
   );
 }
 
-try {
-    // 清空浏览器缓存
-    localStorage.clear();
-    sessionStorage.clear();
-
-    // 清空 React 状态（比如钱包地址、交易哈希等）
-    setWalletAddress(null);
-    setTxHash(null);
-    setShowFireworks(false);
-
-    // 如果你还保存了合约实例、signer、provider 等
-    // 可以在这里也清掉
-    if (window.ethereum && window.ethereum.selectedAddress) {
-      console.log("🧹 Wallet state reset");
-    }
-
-    // 强制刷新页面，确保一切干净重载
-    window.location.reload();
-
-  } catch (err) {
-    console.error("Error clearing cache:", err);
-  }
-  
 export default App;
