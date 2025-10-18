@@ -5,6 +5,11 @@ import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import "./index.css";
 
+ useEffect(() => {
+    // 模拟主线程阻塞前的等待
+    const timer = setTimeout(() => {
+      setLoading(false);
+
 try {
     // 清空浏览器缓存
     localStorage.clear();
@@ -28,6 +33,11 @@ try {
     console.error("Error clearing cache:", err);
   }
   
+    }, 2000); // 等待 2 秒
+
+    return () => clearTimeout(timer);
+  }, []);
+
 const CONTRACT_ADDRESS = "0x21e63270f85f81fb81f2c2319c6bb52f9015881d";
 const ABI = [
   {
